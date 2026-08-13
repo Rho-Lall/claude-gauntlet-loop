@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Gauntlet Loop</title>
+<meta name="description" content="An interactive explainer: how to make an AI agent improve its own work by giving it a real bar and a cold critic. With three e-commerce demos you play yourself.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=Inter:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔁</text></svg>">
+</head>
+<body>
+
+<a class="skip" href="#player">Skip to the demos</a>
+
+<header class="masthead">
+  <div class="wrap">
+    <span class="eyebrow">An interactive explainer</span>
+    <h1>The Gauntlet Loop</h1>
+    <p class="standfirst">How to make an agent improve its own work: give it a goal, a real bar, and a critic that has never seen what it built.</p>
+    <div class="masthead-meta">
+      <span><b>3</b> demos you play</span>
+      <span><b>18</b> rounds of critique</span>
+      <span><b>~15</b> min</span>
+      <span><button class="btn btn--ghost" data-act="theme" type="button">Toggle theme</button></span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<section class="wrap">
+  <h2>The one-sentence version</h2>
+  <p>Give an agent a goal and a real example of what great looks like, then let it build, critique, and rebuild until the two match. That is the whole method. Everything else is detail about how not to break it.</p>
+  <p>The interesting claim is not that critique helps — everyone knows that. It is that <strong>the quality of the bar determines the quality of the critique</strong>, and almost everything people call "the model isn't good enough" is actually a bar problem. Drag the slider and watch what happens to the feedback.</p>
+
+  <div class="fig" id="ex-bar">
+    <div class="fig-head">
+      <span class="fig-title">Exhibit 1 · precision of the bar</span>
+      <span class="fig-title" data-slot="bar">"Make it good."</span>
+    </div>
+    <div class="fig-body">
+      <div class="slider-row">
+        <span class="ends">vague</span>
+        <input type="range" min="0" max="4" step="1" value="0" aria-label="How concrete is the bar">
+        <span class="ends">measured</span>
+      </div>
+      <div class="bar-demo-out" data-grade="low">
+        <span class="lbl">Critique the agent produces</span>
+        <div class="critique" data-slot="critique"></div>
+        <div class="verdict" data-slot="verdict"></div>
+      </div>
+    </div>
+    <p class="fig-caption">Same model, same builder, same work. Only the reference changed.</p>
+  </div>
+
+  <p>Notice the failure mode at the left end. A vague bar does not produce <em>weak</em> critique — it produces <em>unfalsifiable</em> critique. "Make it more premium" has no condition under which it is satisfied, so the loop runs forever without converging. Loops die of vague bars far more often than they die of weak models.</p>
+
+  <h2>The mechanism</h2>
+  <p>Six steps. The two that get skipped are steps 2 and 5, and skipping either one is usually fatal.</p>
+
+  <div class="fig" id="ex-loop">
+    <div class="fig-head">
+      <span class="fig-title">Exhibit 2 · the loop</span>
+      <span class="fig-title" data-slot="count">1 / 6</span>
+    </div>
+    <div class="fig-body">
+      <div class="loop-stage"></div>
+      <div class="loop-narr"></div>
+      <div class="advance">
+        <button class="btn btn--ghost" data-act="prev" type="button">Back</button>
+        <button class="btn" data-act="next" type="button">Next step</button>
+      </div>
+    </div>
+  </div>
+
+  <p>Step 5 deserves the most attention. The critic must run in <strong>fresh context</strong> — it should never have seen the build happen. An agent that watched itself make a choice will defend that choice, and a critic that defends is not a critic. This is also why "just ask the model to review its own output" underperforms so reliably.</p>
+
+  <div class="callout">
+    <p><strong>The counterintuitive rule:</strong> the critic names <em>one</em> gap per round, not a list. A list of twelve fixes gets you twelve half-fixes and no way to tell which one mattered. One gap per round is slower per round and dramatically faster to convergence.</p>
+  </div>
+</section>
+
+<hr class="rule">
+
+<section class="wrap">
+  <h2>Now play it</h2>
+  <p>Below are three loops run for <strong>Harborline</strong>, a fictional DTC outerwear brand: a paid social ad, a landing page hero, and an SEO category page. Each ran six rounds against a real bar.</p>
+  <p>Your job is the critic's job. You will see what the builder produced and four flaws in it. <strong>All four are real.</strong> Pick the one that is largest — the one whose absence caps everything downstream. Then compare against what the critic actually wrote.</p>
+  <p>Spotting flaws is easy. Ranking them is the skill, and it is the entire reason this method works.</p>
+</section>
+
+<section class="wrap wrap--wide">
+  <div class="player" id="player">
+    <div class="player-top">
+      <div class="seg" role="tablist" aria-label="Choose a demo"></div>
+    </div>
+    <div data-slot="stage"></div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<section class="wrap">
+  <h2>What each demo teaches</h2>
+  <p>The three loops were not chosen for variety. Each one contains a specific failure that only shows up when you watch a loop run over time.</p>
+
+  <ol class="principles">
+    <li>
+      <h4>The ad loop — a correct fix in the wrong place</h4>
+      <p>Round 4 is the plateau. The builder implements the critique faithfully and the score barely moves, because the fix landed past the point where mobile truncates the caption. Correct in the file, invisible on the screen. The critic has to check what shipped to the eye, not what shipped to the diff.</p>
+    </li>
+    <li>
+      <h4>The hero loop — half a fix is worse than none</h4>
+      <p>Adding the price without the returns policy turns a browsing visitor into a deciding visitor with an unanswered objection. Some changes only pay off in pairs, and a one-gap-per-round rule has to be smart enough to notice.</p>
+    </li>
+    <li>
+      <h4>The SEO loop — the right critique at the wrong time</h4>
+      <p>Watch how long "there is no schema markup" waits before becoming the top critique. It is true from round one. Acting on it early would have been a wasted round, because it only matters once the page deserves to rank at all.</p>
+    </li>
+  </ol>
+
+  <h2>The rules that make it work</h2>
+  <ol class="principles">
+    <li>
+      <h4>Run it in an agentic harness</h4>
+      <p>The agent needs to open files, run code, look at output, and spawn subagents. A chat window cannot inspect its own work, so it cannot close a loop.</p>
+    </li>
+    <li>
+      <h4>Give the goal, not the implementation</h4>
+      <p>Describe the outcome and stop. Prescribing the architecture caps the result at your own idea of it, which is usually the thing you were hoping to beat.</p>
+    </li>
+    <li>
+      <h4>Make the bar an artifact, not an adjective</h4>
+      <p>Screenshots for a game. Real paragraphs for prose. Live competitor pages for a landing page. If the agent cannot open it and measure against it, it is not a bar.</p>
+    </li>
+    <li>
+      <h4>Decompose before building</h4>
+      <p>Split the goal into the smallest pieces that can improve independently. Three small loops converge faster than one large one, and they fail more legibly.</p>
+    </li>
+    <li>
+      <h4>Keep the critic cold</h4>
+      <p>Separate agent, fresh context, never saw the build. Self-review produces agreeable, low-information notes because the reviewer is defending decisions it remembers making.</p>
+    </li>
+    <li>
+      <h4>Do not cap the rounds</h4>
+      <p>Run until the gap is inside tolerance or the budget is gone. A fixed round count stops the loop at an arbitrary point that has nothing to do with quality.</p>
+    </li>
+    <li>
+      <h4>Watch without interrupting</h4>
+      <p>Have the agents keep a live progress page. Interrupting mid-loop to redirect usually resets the convergence you were paying for.</p>
+    </li>
+  </ol>
+
+  <div class="callout">
+    <p><strong>The stop condition matters as much as the loop.</strong> Every demo above terminates on a number, not on a feeling. A loop with no stop condition will happily spend your entire budget rewriting something that was finished four rounds ago.</p>
+  </div>
+</section>
+
+<hr class="rule">
+
+<section class="wrap" id="self-loop">
+  <h2>This page ran the loop on itself</h2>
+  <p>The design you are reading was built by the same method. A bar was extracted from three reference explainers as measured values — type scale ratio, interaction density, color count — and a cold critic scored this page against it, one gap per round.</p>
+  <div class="fig">
+    <div class="fig-head"><span class="fig-title">Exhibit 4 · the loop that built this page</span></div>
+    <div class="fig-body" data-slot="self-body"></div>
+    <p class="fig-caption">The bar is committed in the repo as <code>REFERENCE-BAR.md</code>. The critic could cite nothing that was not a number in that file.</p>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <p>Built as a demonstration of the gauntlet loop method. Harborline is fictional; its numbers are invented but internally consistent, which is what lets the critiques cite evidence instead of taste.</p>
+    <p>Method described at <a href="https://somethingbig.ai/gauntlet-loop">somethingbig.ai/gauntlet-loop</a>. Bar extracted from <a href="https://ciechanow.ski/mechanical-watch/">ciechanow.ski</a>, <a href="https://ncase.me/trust/">ncase.me/trust</a>, and <a href="https://pudding.cool/2018/02/waveforms/">pudding.cool</a>.</p>
+  </div>
+</footer>
+
+<script src="js/data/ad-creative.js"></script>
+<script src="js/data/landing-hero.js"></script>
+<script src="js/data/seo-category.js"></script>
+<script src="js/data/self.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
