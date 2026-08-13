@@ -69,9 +69,10 @@
     <div class="fig-body">
       <div class="loop-stage"></div>
       <div class="loop-narr"></div>
-      <div class="advance">
-        <button class="btn btn--ghost" data-act="prev" type="button">Back</button>
-        <button class="btn" data-act="next" type="button">Next step</button>
+      <div class="slider-row" style="margin-top:1.1rem">
+        <span class="ends">goal</span>
+        <input type="range" min="0" max="5" step="1" value="0" aria-label="Scrub through the six steps of the loop">
+        <span class="ends">repeat</span>
       </div>
     </div>
   </div>
@@ -88,12 +89,15 @@
 <section class="wrap">
   <h2>Now play it</h2>
   <p>Below are three loops run for <strong>Harborline</strong>, a fictional DTC outerwear brand: a paid social ad, a landing page hero, and an SEO category page. Each ran six rounds against a real bar.</p>
-  <p>Your job is the critic's job. You will see what the builder produced and four flaws in it. <strong>All four are real.</strong> Pick the one that is largest — the one whose absence caps everything downstream. Then compare against what the critic actually wrote.</p>
-  <p>Spotting flaws is easy. Ranking them is the skill, and it is the entire reason this method works.</p>
 </section>
 
 <section class="wrap wrap--wide">
   <div class="player" id="player">
+    <div class="player-brief">
+      <div class="brief-line"><span class="brief-k">Your job</span> You will see what the builder produced, and four flaws in it.</div>
+      <div class="brief-line"><span class="brief-k">The catch</span> All four are real. Pick the <em>largest</em> — the one whose absence caps everything downstream.</div>
+      <div class="brief-line"><span class="brief-k">The point</span> Spotting flaws is easy. Ranking them is the skill, and it is the entire reason this method works.</div>
+    </div>
     <div class="player-top">
       <div class="seg" role="tablist" aria-label="Choose a demo"></div>
     </div>
@@ -111,46 +115,58 @@
     <li>
       <h4>The ad loop — a correct fix in the wrong place</h4>
       <p>Round 4 is the plateau. The builder implements the critique faithfully and the score barely moves, because the fix landed past the point where mobile truncates the caption. Correct in the file, invisible on the screen. The critic has to check what shipped to the eye, not what shipped to the diff.</p>
+      <button class="btn btn--ghost btn--sm" data-jump="ad-creative:4" type="button">Open that round →</button>
     </li>
     <li>
       <h4>The hero loop — half a fix is worse than none</h4>
       <p>Adding the price without the returns policy turns a browsing visitor into a deciding visitor with an unanswered objection. Some changes only pay off in pairs, and a one-gap-per-round rule has to be smart enough to notice.</p>
+      <button class="btn btn--ghost btn--sm" data-jump="landing-hero:3" type="button">Open that round →</button>
     </li>
     <li>
       <h4>The SEO loop — the right critique at the wrong time</h4>
-      <p>Watch how long "there is no schema markup" waits before becoming the top critique. It is true from round one. Acting on it early would have been a wasted round, because it only matters once the page deserves to rank at all.</p>
+      <p>Watch how long the schema-markup critique waits before reaching the top of the list. It is true from round one. Acting on it early would have been a wasted round, because it only matters once the page deserves to rank at all.</p>
+      <button class="btn btn--ghost btn--sm" data-jump="seo-category:5" type="button">Open that round →</button>
     </li>
   </ol>
 
   <h2>The rules that make it work</h2>
-  <ol class="principles">
-    <li>
+  <p>Seven rules. Each one exists because of a specific way loops fail — flip any rule to see what it is protecting you from.</p>
+
+  <ol class="principles" id="rules">
+    <li data-rule>
       <h4>Run it in an agentic harness</h4>
-      <p>The agent needs to open files, run code, look at output, and spawn subagents. A chat window cannot inspect its own work, so it cannot close a loop.</p>
+      <p data-face="on">The agent needs to open files, run code, look at output, and spawn subagents. A chat window cannot inspect its own work, so it cannot close a loop.</p>
+      <p data-face="off" hidden>Without it: the agent describes improvements it cannot verify. Quality plateaus immediately because nothing ever gets measured against anything.</p>
     </li>
-    <li>
+    <li data-rule>
       <h4>Give the goal, not the implementation</h4>
-      <p>Describe the outcome and stop. Prescribing the architecture caps the result at your own idea of it, which is usually the thing you were hoping to beat.</p>
+      <p data-face="on">Describe the outcome and stop. Prescribing the architecture caps the result at your own idea of it, which is usually the thing you were hoping to beat.</p>
+      <p data-face="off" hidden>Without it: you get a faithful implementation of your first guess. The loop optimizes inside a box you drew before you understood the problem.</p>
     </li>
-    <li>
+    <li data-rule>
       <h4>Make the bar an artifact, not an adjective</h4>
-      <p>Screenshots for a game. Real paragraphs for prose. Live competitor pages for a landing page. If the agent cannot open it and measure against it, it is not a bar.</p>
+      <p data-face="on">Screenshots for a game. Real paragraphs for prose. Live competitor pages for a landing page. If the agent cannot open it and measure against it, it is not a bar.</p>
+      <p data-face="off" hidden>Without it: critiques become unfalsifiable. "More premium" has no satisfying condition, so the loop runs forever and converges on nothing. This is the most common failure by a wide margin.</p>
     </li>
-    <li>
+    <li data-rule>
       <h4>Decompose before building</h4>
-      <p>Split the goal into the smallest pieces that can improve independently. Three small loops converge faster than one large one, and they fail more legibly.</p>
+      <p data-face="on">Split the goal into the smallest pieces that can improve independently. Three small loops converge faster than one large one, and they fail more legibly.</p>
+      <p data-face="off" hidden>Without it: every critique addresses the whole artifact at once, so fixes collide and you cannot tell which change caused which result.</p>
     </li>
-    <li>
+    <li data-rule>
       <h4>Keep the critic cold</h4>
-      <p>Separate agent, fresh context, never saw the build. Self-review produces agreeable, low-information notes because the reviewer is defending decisions it remembers making.</p>
+      <p data-face="on">Separate agent, fresh context, never saw the build. Self-review produces agreeable, low-information notes because the reviewer is defending decisions it remembers making.</p>
+      <p data-face="off" hidden>Without it: the critique congratulates the build. An agent that watched itself choose will justify the choice, and you get "this looks strong overall" forever.</p>
     </li>
-    <li>
+    <li data-rule>
       <h4>Do not cap the rounds</h4>
-      <p>Run until the gap is inside tolerance or the budget is gone. A fixed round count stops the loop at an arbitrary point that has nothing to do with quality.</p>
+      <p data-face="on">Run until the gap is inside tolerance or the budget is gone. A fixed round count stops the loop at an arbitrary point that has nothing to do with quality.</p>
+      <p data-face="off" hidden>Without it: you stop at round three because you said three, shipping whatever the work happened to look like at an arbitrary moment.</p>
     </li>
-    <li>
+    <li data-rule>
       <h4>Watch without interrupting</h4>
-      <p>Have the agents keep a live progress page. Interrupting mid-loop to redirect usually resets the convergence you were paying for.</p>
+      <p data-face="on">Have the agents keep a live progress page. Interrupting mid-loop to redirect usually resets the convergence you were paying for.</p>
+      <p data-face="off" hidden>Without it: you steer on a half-finished round, the critic re-anchors on your comment instead of the bar, and the loop restarts from a worse position.</p>
     </li>
   </ol>
 
@@ -163,7 +179,7 @@
 
 <section class="wrap" id="self-loop">
   <h2>This page ran the loop on itself</h2>
-  <p>The design you are reading was built by the same method. A bar was extracted from three reference explainers as measured values — type scale ratio, interaction density, color count — and a cold critic scored this page against it, one gap per round.</p>
+  <p>The design you are reading was built by the same method. A bar was extracted from three reference explainers as measured values — type scale ratio, interaction density, color count — and four cold critics scored this page against it, one gap per round. It went <strong>21 → 6</strong> and stopped on its own. Round 3 is the interesting one: the critic was right and its proposed fix would have wrecked the page.</p>
   <div class="fig">
     <div class="fig-head"><span class="fig-title">Exhibit 4 · the loop that built this page</span></div>
     <div class="fig-body" data-slot="self-body"></div>

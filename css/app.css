@@ -11,7 +11,9 @@
   --fs-h3:      1.4625rem;
   --fs-h2:      1.6875rem;
   --fs-h1:      2.025rem;
-  --fs-display: clamp(2.4rem, 7vw, 3.4rem);
+  /* masthead display type sits outside the article ladder, exactly as R1 does:
+     its #site_title is 2.8em against an article h1 of 1.8em */
+  --fs-display: clamp(2.1rem, 6vw, 2.8rem);
 
   --lh-body: 1.6;
   --lh-tight: 1.25;
@@ -36,8 +38,9 @@
   --accent-wash:    #E8F2FD;
   --code-bg:     #EAEAEA;
 
-  /* semantic pair for the quiz — deliberately desaturated so the page
-     still reads as single-accent (see M2 note in REFERENCE-BAR.md) */
+  /* semantic pair for the quiz — permitted by REFERENCE-BAR.md Amendment 2.
+     Desaturated so the page still reads as single-accent, and always paired
+     with a glyph so no state is carried by hue alone. */
   --ok:      #1F7A4D;
   --ok-wash: #E7F3EC;
   --no:      #A34141;
@@ -350,7 +353,7 @@ input[type="range"]::-moz-range-thumb {
   margin-bottom: 0.35rem;
 }
 .bar-demo-out .critique {
-  font-size: 1.05rem;
+  font-size: var(--fs-body);
   color: var(--ink);
   min-height: 3.2em;
 }
@@ -388,7 +391,10 @@ input[type="range"]::-moz-range-thumb {
   padding: 0.95rem 1.05rem;
   transition: border-color var(--t-state), background var(--t-state), opacity var(--t-state);
   opacity: 0.45;
+  cursor: pointer;
 }
+.loop-node:hover { opacity: 0.8; border-color: var(--line-strong); }
+.loop-node[data-on="1"]:hover { opacity: 1; }
 .loop-node[data-on="1"] {
   opacity: 1;
   border-color: var(--accent);
@@ -424,6 +430,28 @@ input[type="range"]::-moz-range-thumb {
 /* ---------- the player ---------- */
 
 .player { margin: 2.25rem 0; }
+
+.player-brief {
+  border-left: 3px solid var(--line-strong);
+  padding-left: 1.1rem;
+  margin-bottom: 1.4rem;
+}
+.brief-line {
+  font-size: var(--fs-body);
+  color: var(--ink-mute);
+  padding: 0.3rem 0;
+}
+.brief-k {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+  display: inline-block;
+  min-width: 5.5rem;
+  margin-right: 0.5rem;
+}
+.brief-line em { color: var(--ink); font-style: normal; font-weight: 500; }
 
 .player-top {
   display: flex;
@@ -670,6 +698,19 @@ input[type="range"]::-moz-range-thumb {
 .choice[data-verdict="wrong"] .k { color: var(--no); }
 .choice[data-verdict="muted"] { opacity: 0.72; }
 
+/* M4 — the reveal is the page's largest state change, so it gets motion.
+   Player.draw() rebuilds these nodes, so an entry animation is used rather
+   than a transition (a fresh node has no prior value to transition from). */
+@keyframes reveal-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.verdict-banner, .critic-note {
+  animation: reveal-in var(--t-state) ease-in-out both;
+}
+.critic-note { animation-delay: 0.08s; }
+
 .verdict-banner {
   border-radius: var(--r-md);
   padding: 0.75rem 1rem;
@@ -698,7 +739,7 @@ input[type="range"]::-moz-range-thumb {
   display: block;
   margin-bottom: 0.4rem;
 }
-.critic-note .txt { font-size: 1.02rem; color: var(--ink-head); }
+.critic-note .txt { font-size: var(--fs-body); color: var(--ink-head); }
 .critic-note .ev {
   font-size: var(--fs-micro);
   color: var(--ink-mute);
@@ -752,7 +793,91 @@ input[type="range"]::-moz-range-thumb {
   display: grid; place-items: center;
 }
 .principles h4 { padding: 0 0 0.15rem; }
-.principles p { padding: 0; font-size: var(--fs-small); color: var(--ink-mute); }
+.principles p { padding: 0; font-size: var(--fs-body); color: var(--ink-mute); }
+.principles li[data-flipped="1"] { background: var(--surface); }
+.principles li[data-flipped="1"] p { color: var(--ink); }
+
+.btn--sm, .rule-flip {
+  font-family: var(--font-text);
+  font-size: var(--fs-micro);
+  font-weight: 500;
+  background: transparent;
+  color: var(--ink-mute);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-pill);
+  padding: 0.28rem 0.8rem;
+  margin-top: 0.7rem;
+  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
+}
+.btn--sm:hover, .rule-flip:hover {
+  background: var(--accent-wash);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.principles li[data-flipped="1"] .rule-flip {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ---------- exhibit 4: the loop that built this page ---------- */
+
+.self-track {
+  display: flex;
+  gap: 6px;
+  align-items: flex-end;
+  height: 92px;
+}
+.self-seg {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  height: 100%;
+  cursor: pointer;
+  opacity: 0.4;
+  transition: opacity var(--t-state);
+}
+.self-seg[data-on="1"] { opacity: 1; }
+.self-seg:hover { opacity: 0.85; }
+.self-seg[data-on="1"]:hover { opacity: 1; }
+.self-fill {
+  width: 100%;
+  background: var(--line-strong);
+  border-radius: 3px 3px 0 0;
+  transition: background var(--t-state), height var(--t-state);
+}
+.self-seg[data-on="1"] .self-fill { background: var(--accent); }
+.self-num {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  color: var(--ink-faint);
+  padding-top: 0.35rem;
+}
+.self-seg[data-on="1"] .self-num { color: var(--ink); }
+
+.self-panel {
+  margin-top: 1.2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+.self-head {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+  padding-bottom: 0.5rem;
+}
+.self-crit { font-size: var(--fs-body); color: var(--ink); }
+.self-fix {
+  font-size: var(--fs-small);
+  color: var(--ink-mute);
+  margin-top: 0.7rem;
+  padding-top: 0.7rem;
+  border-top: 1px dashed var(--line);
+}
 
 /* ---------- misc ---------- */
 
@@ -763,7 +888,7 @@ input[type="range"]::-moz-range-thumb {
   border-radius: var(--r-md);
   padding: 1rem 1.2rem;
   margin: 1.8rem 0;
-  font-size: var(--fs-small);
+  font-size: var(--fs-body);
 }
 .callout p { padding: 0.3rem 0; }
 .callout p:first-child { padding-top: 0; }
@@ -791,7 +916,8 @@ input[type="range"]::-moz-range-thumb {
 .scroll-x { overflow-x: auto; }
 
 @media (max-width: 640px) {
-  :root { --pad-x: 1.25rem; --fs-body: 1.0625rem; }
+  /* M1 floor is 1.125rem — only the gutter shrinks on small screens, never the type */
+  :root { --pad-x: 1.25rem; }
   .loop-stage { grid-template-columns: 1fr; }
   .goalcard dl { grid-template-columns: 1fr; gap: 0.15rem; }
   .goalcard dt { padding-top: 0.5em; }

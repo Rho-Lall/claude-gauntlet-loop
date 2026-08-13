@@ -43,6 +43,27 @@ Raw artifacts live in the scratchpad; measurements below are reproducible from t
 
 **Fail condition:** more than one accent hue; pure black text; pure white ground.
 
+### Amendment 2 — decorative vs. semantic color
+
+*Added after round 3. Two critics caught the CSS excusing its extra hues by citing an
+"M2 note" in this file that did not exist. It does now, and it is narrower than the
+excuse was.*
+
+The one-accent rule governs **decorative** color — the hue a design reaches for to look
+like itself. It does not govern **semantic** color that encodes state the user must
+distinguish: correct vs. incorrect.
+
+Permitted: exactly one additional pair (`--ok`, `--no`), desaturated enough that the page
+still reads as single-accent, and **never the sole carrier of meaning** — every use must
+be redundant with a glyph or a text label, so the state survives color blindness and
+greyscale.
+
+**Fail condition:** more than one decorative accent; any state encoded by hue alone.
+
+`--surface: #FFFFFF` is likewise permitted as a *card* ground layered on the `#F8F8F8`
+page ground — the fail condition targets a pure-white **page**, which R1 avoids and this
+page also avoids.
+
 ## M3 — Interaction density (measured from R1's DOM)
 
 Counted directly out of the fetched HTML:
@@ -59,6 +80,35 @@ Derived:
 
 **Fail condition:** more than 3 consecutive paragraphs with nothing to touch. This is
 the single most important metric — it is what separates an explainer from an article.
+
+### Amendment 1 — scope of the slider ratio
+
+*Added after round 3 of the loop that built this page. Recorded rather than silently
+applied, because moving a bar mid-loop is the most common way people fake convergence.*
+
+The 2:1 ratio was measured on R1, which teaches a **continuous mechanism** — gear
+ratios, spring tension, escapement angle. Those are scalar parameters, and a slider is
+the honest control for a scalar.
+
+Three consecutive critics correctly flagged this page for inverting the ratio, and each
+proposed converting the demo player's round-advance into a scrubber. That fix would be
+wrong: the player teaches **ranking under commitment**. You must choose before you see
+the answer. A scrubber lets you slide to the reveal, which removes the only thing the
+exercise tests.
+
+So the ratio is scoped, not deleted:
+
+- Exhibits over a **continuous parameter** must use direct manipulation. (This page: the
+  bar-precision slider and the loop scrubber.)
+- Exhibits over a **discrete commitment** may use buttons, and a scrubber is a defect
+  there, not a fix.
+
+**Revised fail condition:** any continuous-parameter exhibit driven by next/prev buttons.
+
+The general lesson, which is why this is written down instead of quietly ignored: a bar
+transplanted from a reference with a different job will produce critiques that are
+correct in the letter and destructive in the fix. When that happens the answer is to
+sharpen the bar in public — not to ignore the critic, and not to damage the work.
 
 ## M4 — Motion (from R1 + R2)
 

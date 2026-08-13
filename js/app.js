@@ -13,6 +13,14 @@
     if (txt != null) n.textContent = txt;
     return n;
   }
+  /* M4 — honor prefers-reduced-motion for scripted scrolling too, not just CSS */
+  function softScroll(node, block) {
+    if (!node || !node.scrollIntoView) return;
+    var reduce = window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    node.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: block || 'start' });
+  }
+
   function esc(s) {
     return String(s).replace(/[&<>"']/g, function (c) {
       return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
@@ -100,10 +108,8 @@
     if (!root) return;
     var stage = $('.loop-stage', root);
     var narr = $('.loop-narr', root);
-    var prev = $('[data-act="prev"]', root);
-    var next = $('[data-act="next"]', root);
+    var scrub = $('input[type="range"]', root);
     var counter = $('[data-slot="count"]', root);
-    var i = 0;
 
     LOOP_STEPS.forEach(function (s) {
       var node = el('div', 'loop-node');
@@ -115,17 +121,18 @@
     var nodes = $$('.loop-node', stage);
 
     function draw() {
+      var i = Number(scrub.value);
       nodes.forEach(function (n, k) { n.setAttribute('data-on', k <= i ? '1' : '0'); });
       narr.textContent = LOOP_STEPS[i].narr;
-      counter.textContent = (i + 1) + ' / ' + LOOP_STEPS.length;
-      prev.disabled = i === 0;
-      next.textContent = i === LOOP_STEPS.length - 1 ? 'Start over' : 'Next step';
+      counter.textContent = LOOP_STEPS[i].t.toLowerCase() + ' · ' + (i + 1) + ' / ' + LOOP_STEPS.length;
     }
-    prev.addEventListener('click', function () { if (i > 0) i--; draw(); });
-    next.addEventListener('click', function () {
-      i = (i === LOOP_STEPS.length - 1) ? 0 : i + 1;
-      draw();
+
+    /* clicking a step is a shortcut to scrubbing to it */
+    nodes.forEach(function (n, k) {
+      n.addEventListener('click', function () { scrub.value = String(k); draw(); });
     });
+
+    scrub.addEventListener('input', draw);
     draw();
   }
 
@@ -338,15 +345,27 @@
     var wrap = el('div', 'meter');
     var track = el('div', 'meter-track');
 
+    var pending = [];
     d.rounds.forEach(function (r, k) {
       var b = el('div', 'meter-bar');
       var revealed = k < self.i || (k === self.i && self.phase !== 'ask');
-      b.style.height = revealed ? Math.max(6, (r.gapScore / max) * 46) + 'px' : '3px';
+      /* start collapsed, then grow on the next frame so the declared
+         transition on .meter-bar actually fires (M4) */
+      b.style.height = '3px';
+      if (revealed) pending.push([b, Math.max(6, (r.gapScore / max) * 46) + 'px']);
       b.setAttribute('data-state', k < self.i ? 'done' : (k === self.i ? 'now' : 'todo'));
       b.title = revealed ? 'Round ' + r.n + ' — gap ' + r.gapScore : 'Round ' + r.n + ' — not reached';
       track.appendChild(b);
     });
     wrap.appendChild(track);
+
+    if (pending.length && window.requestAnimationFrame) {
+      window.requestAnimationFrame(function () {
+        pending.forEach(function (p) { p[0].style.height = p[1]; });
+      });
+    } else {
+      pending.forEach(function (p) { p[0].style.height = p[1]; });
+    }
 
     var lab = el('div', 'meter-labels');
     lab.appendChild(el('span', null, 'gap score'));
@@ -381,8 +400,15 @@
     r.choices.forEach(function (c, k) {
       var b = el('button', 'choice');
       b.setAttribute('type', 'button');
+      /* Amendment 2: state is never carried by hue alone — the key slot
+         swaps to a glyph on reveal so it survives greyscale. */
+      var key = String.fromCharCode(65 + k);
+      if (self.phase === 'reveal') {
+        key = c.correct ? '✓ largest'
+            : (self.picks[self.i] === c.id ? '✕ yours' : '– smaller');
+      }
       var head = el('span');
-      head.appendChild(el('span', 'k', String.fromCharCode(65 + k)));
+      head.appendChild(el('span', 'k', key));
       head.appendChild(document.createTextNode(c.text));
       b.appendChild(head);
       b.appendChild(el('span', 'why', c.why));
@@ -399,7 +425,7 @@
           self.phase = 'reveal';
           self.draw();
           var node = $('.critic-note', self.stage);
-          if (node && node.scrollIntoView) node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          softScroll(node, 'center');
         });
       }
       q.appendChild(b);
@@ -422,7 +448,7 @@
         if (last) { self.phase = 'done'; }
         else { self.i++; self.phase = 'ask'; }
         self.draw();
-        if (self.root.scrollIntoView) self.root.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        softScroll(self.root, 'start');
       });
       adv.appendChild(btn);
       q.appendChild(adv);
@@ -458,6 +484,60 @@
   };
 
   /* ==========================================================
+     Deep links from the prose into a specific round
+     ========================================================== */
+
+  Player.prototype.jumpTo = function (slug, roundN) {
+    if (!this.demos[slug]) return;
+    this.slug = slug;
+    this.reset();
+    this.i = Math.max(0, Math.min(roundN - 1, this.demos[slug].rounds.length - 1));
+    /* everything before the target is treated as already run */
+    for (var k = 0; k < this.i; k++) {
+      var right = this.demos[slug].rounds[k].choices.filter(function (c) { return c.correct; })[0];
+      this.picks[k] = right.id;
+    }
+    this.draw();
+    softScroll(this.root, 'start');
+  };
+
+  function mountJumps(player) {
+    $$('[data-jump]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var parts = btn.getAttribute('data-jump').split(':');
+        player.jumpTo(parts[0], Number(parts[1]));
+      });
+    });
+  }
+
+  /* ==========================================================
+     Rule flippers — each rule shows the failure it prevents
+     ========================================================== */
+
+  function mountRules() {
+    $$('[data-rule]').forEach(function (li) {
+      var on = $('[data-face="on"]', li);
+      var off = $('[data-face="off"]', li);
+      if (!on || !off) return;
+
+      var btn = el('button', 'rule-flip', 'Without this rule →');
+      btn.type = 'button';
+      btn.setAttribute('aria-expanded', 'false');
+      var flipped = false;
+
+      btn.addEventListener('click', function () {
+        flipped = !flipped;
+        on.hidden = flipped;
+        off.hidden = !flipped;
+        li.setAttribute('data-flipped', flipped ? '1' : '0');
+        btn.textContent = flipped ? '← With it' : 'Without this rule →';
+        btn.setAttribute('aria-expanded', flipped ? 'true' : 'false');
+      });
+      li.appendChild(btn);
+    });
+  }
+
+  /* ==========================================================
      Self-loop section (populated after the app critiques itself)
      ========================================================== */
 
@@ -468,28 +548,59 @@
     if (!data || !data.rounds || !data.rounds.length) { root.style.display = 'none'; return; }
 
     var body = $('[data-slot="self-body"]', root);
-    var max = Math.max.apply(null, data.rounds.map(function (r) { return r.gapScore; }));
+    var rounds = data.rounds;
+    var max = Math.max.apply(null, rounds.map(function (r) { return r.gapScore; }));
 
-    data.rounds.forEach(function (r) {
-      var row = el('div', 'seo-section');
-      var h = el('h5', null, 'Round ' + r.n + ' — gap ' + r.gapScore);
-      row.appendChild(h);
-      row.appendChild(el('p', null, r.critique));
-      if (r.fix) {
-        var f = el('p', null, '→ ' + r.fix);
-        f.style.color = 'var(--ink-faint)';
-        f.style.paddingTop = '0.3rem';
-        row.appendChild(f);
-      }
-      var bar = el('div');
-      bar.style.height = '4px';
-      bar.style.marginTop = '0.6rem';
-      bar.style.borderRadius = '3px';
-      bar.style.background = 'var(--accent)';
-      bar.style.width = ((r.gapScore / max) * 100) + '%';
-      row.appendChild(bar);
-      body.appendChild(row);
+    /* gap track — one segment per round, all visible at once */
+    var track = el('div', 'self-track');
+    var segs = rounds.map(function (r) {
+      var seg = el('div', 'self-seg');
+      var fill = el('div', 'self-fill');
+      fill.style.height = ((r.gapScore / max) * 100) + '%';
+      seg.appendChild(fill);
+      seg.appendChild(el('span', 'self-num', String(r.gapScore)));
+      track.appendChild(seg);
+      return seg;
     });
+    body.appendChild(track);
+
+    var scrub = el('input');
+    scrub.type = 'range';
+    scrub.min = '0';
+    scrub.max = String(rounds.length - 1);
+    scrub.step = '1';
+    scrub.value = '0';
+    scrub.setAttribute('aria-label', 'Scrub through the rounds of this page’s own loop');
+
+    var row = el('div', 'slider-row');
+    row.style.marginTop = '0.9rem';
+    row.appendChild(el('span', 'ends', 'round 1'));
+    row.appendChild(scrub);
+    row.appendChild(el('span', 'ends', 'round ' + rounds.length));
+    body.appendChild(row);
+
+    var panel = el('div', 'self-panel');
+    var pHead = el('div', 'self-head');
+    var pCrit = el('div', 'self-crit');
+    var pFix = el('div', 'self-fix');
+    panel.appendChild(pHead);
+    panel.appendChild(pCrit);
+    panel.appendChild(pFix);
+    body.appendChild(panel);
+
+    function draw() {
+      var i = Number(scrub.value), r = rounds[i];
+      segs.forEach(function (s, k) { s.setAttribute('data-on', k <= i ? '1' : '0'); });
+      pHead.textContent = 'Round ' + r.n + ' · gap ' + r.gapScore +
+        (i === rounds.length - 1 ? ' · stop condition met' : '');
+      pCrit.textContent = r.critique;
+      pFix.textContent = r.fix ? '→ ' + r.fix : '';
+    }
+    segs.forEach(function (s, k) {
+      s.addEventListener('click', function () { scrub.value = String(k); draw(); });
+    });
+    scrub.addEventListener('input', draw);
+    draw();
   }
 
   /* ==========================================================
@@ -520,7 +631,8 @@
     mountLoopStepper();
     mountTheme();
     mountSelf();
+    mountRules();
     var p = $('#player');
-    if (p && window.GAUNTLET_DEMOS) new Player(p);
+    if (p && window.GAUNTLET_DEMOS) mountJumps(new Player(p));
   });
 })();
